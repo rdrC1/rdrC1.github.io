@@ -70,6 +70,11 @@ class PWAInstallManager {
 
     // iOS install detection
     this.detectIOSInstall();
+    
+    // Ensure button is not in header on init
+    setTimeout(() => {
+      this.ensureButtonInSettings();
+    }, 500);
   }
 
   detectIOSInstall() {
@@ -87,13 +92,81 @@ class PWAInstallManager {
     }
   }
 
-  showInstallButton() {
-    // Don't show if native app
+  ensureButtonInSettings() {
+    // Don't do anything if native app
     if (this.isNative) {
       return;
     }
     
-    // Create install button if it doesn't exist
+    // Check if button exists in header and remove it
+    const header = document.querySelector('.app-header');
+    if (header) {
+      const headerButton = header.querySelector('#pwa-install-button');
+      if (headerButton) {
+        console.log('[PWA] Removing install button from header');
+        headerButton.remove();
+        this.installButton = null;
+      }
+    }
+    
+    // If we have a deferred prompt, ensure button is in settings
+    if (this.deferredPrompt && this.installButton) {
+      const settingsPage = document.getElementById('settingsPage');
+      if (settingsPage) {
+        const buttonInSettings = settingsPage.querySelector('#pwa-install-button');
+        if (!buttonInSettings && this.installButton.parentElement !== settingsPage) {
+          // Button not in settings, move it there
+          this.addButtonToSettings();
+        }
+      }
+    }
+  }
+
+  addButtonToSettings() {
+    const settingsPage = document.getElementById('settingsPage');
+    if (!settingsPage) {
+      return;
+    }
+    
+    // Remove button from any existing location (especially header)
+    if (this.installButton && this.installButton.parentElement) {
+      const parent = this.installButton.parentElement;
+      // Only remove if it's in header or wrong location
+      if (parent.classList.contains('app-header') || 
+          parent.classList.contains('header-content') ||
+          (!parent.closest('#pwa-install-section'))) {
+        this.installButton.remove();
+      }
+    }
+    
+    // Check if PWA section already exists
+    let pwaSection = settingsPage.querySelector('#pwa-install-section');
+    if (!pwaSection) {
+      // Create a new settings section for PWA install
+      pwaSection = document.createElement('div');
+      pwaSection.id = 'pwa-install-section';
+      pwaSection.className = 'settings-section';
+      pwaSection.innerHTML = `
+        <h3 class="section-title">Alkalmazás telepítése</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">PWA telepítés</span>
+            <span class="setting-description">Telepítsd az alkalmazást a kezdőképernyőre, hogy gyorsabban elérhesd</span>
+          </div>
+        </div>
+      `;
+      
+      // Find the credits section or add at the end
+      const pageContent = settingsPage.querySelector('.page-content');
+      const creditsSection = settingsPage.querySelector('.credits-section');
+      if (creditsSection) {
+        pageContent.insertBefore(pwaSection, creditsSection);
+      } else {
+        pageContent.appendChild(pwaSection);
+      }
+    }
+    
+    // Create button if it doesn't exist
     if (!this.installButton) {
       this.installButton = document.createElement('button');
       this.installButton.id = 'pwa-install-button';
@@ -103,48 +176,36 @@ class PWAInstallManager {
         <span>Telepítés</span>
       `;
       this.installButton.addEventListener('click', () => this.installApp());
-      
-      // Add to settings page instead of header
-      const settingsPage = document.getElementById('settingsPage');
-      if (settingsPage) {
-        // Find the credits section or add before it
-        const creditsSection = settingsPage.querySelector('.credits-section');
-        if (creditsSection) {
-          // Create a new settings section for PWA install
-          const pwaSection = document.createElement('div');
-          pwaSection.className = 'settings-section';
-          pwaSection.innerHTML = `
-            <h3 class="section-title">Alkalmazás telepítése</h3>
-            <div class="setting-item">
-              <div class="setting-info">
-                <span class="setting-label">PWA telepítés</span>
-                <span class="setting-description">Telepítsd az alkalmazást a kezdőképernyőre, hogy gyorsabban elérhesd</span>
-              </div>
-            </div>
-          `;
-          pwaSection.querySelector('.setting-item').appendChild(this.installButton);
-          settingsPage.querySelector('.page-content').insertBefore(pwaSection, creditsSection);
-        } else {
-          // If no credits section, add at the end
-          const pageContent = settingsPage.querySelector('.page-content');
-          const pwaSection = document.createElement('div');
-          pwaSection.className = 'settings-section';
-          pwaSection.innerHTML = `
-            <h3 class="section-title">Alkalmazás telepítése</h3>
-            <div class="setting-item">
-              <div class="setting-info">
-                <span class="setting-label">PWA telepítés</span>
-                <span class="setting-description">Telepítsd az alkalmazást a kezdőképernyőre, hogy gyorsabban elérhesd</span>
-              </div>
-            </div>
-          `;
-          pwaSection.querySelector('.setting-item').appendChild(this.installButton);
-          pageContent.appendChild(pwaSection);
-        }
-      }
     }
     
-    this.installButton.style.display = 'flex';
+    // Add button to the setting-item if not already there
+    const settingItem = pwaSection.querySelector('.setting-item');
+    if (settingItem && !settingItem.querySelector('#pwa-install-button')) {
+      settingItem.appendChild(this.installButton);
+      this.installButton.style.display = 'flex';
+    }
+  }
+
+  showInstallButton() {
+    // Don't show if native app
+    if (this.isNative) {
+      return;
+    }
+    
+    // Create button if it doesn't exist
+    if (!this.installButton) {
+      this.installButton = document.createElement('button');
+      this.installButton.id = 'pwa-install-button';
+      this.installButton.className = 'pwa-install-button';
+      this.installButton.innerHTML = `
+        <span class="material-symbols-outlined">download</span>
+        <span>Telepítés</span>
+      `;
+      this.installButton.addEventListener('click', () => this.installApp());
+    }
+    
+    // Always add to settings page
+    this.addButtonToSettings();
   }
 
   hideInstallButton() {
@@ -232,4 +293,9 @@ class PWAInstallManager {
 
 // Initialize PWA Install Manager
 const pwaInstallManager = new PWAInstallManager();
+
+// Export for use in app.js
+if (typeof window !== 'undefined') {
+  window.pwaInstallManager = pwaInstallManager;
+}
 

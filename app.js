@@ -663,6 +663,10 @@ class App {
         this.loadRoomChangesList();
       } else if (pageId === 'settingsPage') {
         this.loadSettings();
+        // Ensure PWA install button is in settings, not header
+        if (typeof window !== 'undefined' && window.pwaInstallManager) {
+          window.pwaInstallManager.ensureButtonInSettings();
+        }
       }
     }
   }
