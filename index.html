@@ -36,10 +36,35 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+    
+    <!-- Hide splash screen immediately if disabled -->
+    <script>
+        (function() {
+            try {
+                const splashEnabled = localStorage.getItem('splash_enabled');
+                if (splashEnabled !== 'true') {
+                    // Hide splash as soon as DOM is available
+                    function hideSplash() {
+                        const splash = document.getElementById('splashScreen');
+                        if (splash) {
+                            splash.style.display = 'none';
+                        }
+                    }
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', hideSplash);
+                    } else {
+                        hideSplash();
+                    }
+                }
+            } catch (e) {
+                // Ignore errors
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- Splash Screen -->
-    <div id="splashScreen" class="splash-screen">
+    <div id="splashScreen" class="splash-screen" style="display: none;">
         <div class="splash-content">
             <img src="logo.webp" alt="reTerem" class="splash-logo">
         </div>
@@ -116,6 +141,16 @@
 
                 <div class="settings-section">
                     <h3 class="section-title">Használat</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Splash képernyő</span>
+                            <span class="setting-description">Indításkor megjelenő animált splash képernyő</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="splashToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-label">Haptic feedback</span>

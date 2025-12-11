@@ -1384,7 +1384,7 @@ input:checked + .slider:before {
   bottom: 0;
   background-color: var(--md-sys-color-background);
   z-index: 10000;
-  display: flex;
+  display: none; /* Hidden by default, shown only if enabled */
   align-items: center;
   justify-content: center;
   opacity: 1;

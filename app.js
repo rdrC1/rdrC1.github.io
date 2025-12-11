@@ -83,6 +83,20 @@ class App {
     this.init();
   }
 
+  showContentWithoutSplash() {
+    const header = document.querySelector('.app-header');
+    const mainContent = document.querySelector('.main-content');
+    const bottomNav = document.querySelector('.bottom-nav');
+    const splash = document.getElementById('splashScreen');
+    const navLogo = document.querySelector('.logo');
+
+    if (header) header.classList.add('intro-complete');
+    if (mainContent) mainContent.classList.add('intro-complete');
+    if (bottomNav) bottomNav.classList.add('intro-complete');
+    if (navLogo) navLogo.classList.add('visible');
+    if (splash) splash.style.display = 'none';
+  }
+
   async init() {
     // Hide OS splash screen immediately to prevent white flash
     // Hide it before loading theme to avoid white background flash in dark mode
@@ -104,6 +118,11 @@ class App {
     // Load theme early to set background color
     await this.loadTheme();
     await this.loadAmoledMode();
+    // If splash is disabled, hide immediately (before heavy work)
+    const splashEnabledEarly = await storage.getSplashEnabled();
+    if (!splashEnabledEarly) {
+      this.showContentWithoutSplash();
+    }
     await this.loadShowAllFutureChanges();
     this.setupEventListeners();
     this.setupNavigation();
@@ -273,6 +292,7 @@ class App {
   }
 
   async toggleShowAllFutureChanges() {
+    this.hapticFeedback('light');
     this.showAllFutureChanges = !this.showAllFutureChanges;
     await storage.setShowAllFutureChanges(this.showAllFutureChanges);
     
@@ -429,6 +449,11 @@ class App {
     // Haptic feedback toggle
     document.getElementById('hapticFeedbackToggle').addEventListener('change', (e) => {
       this.toggleHapticFeedback(e.target.checked);
+    });
+
+    // Splash screen toggle
+    document.getElementById('splashToggle').addEventListener('change', (e) => {
+      this.toggleSplash(e.target.checked);
     });
 
     // Teacher mode toggle
@@ -1603,6 +1628,7 @@ class App {
   }
 
   async toggleNotifications(enabled) {
+    this.hapticFeedback('light');
     if (enabled) {
       try {
         // Request permissions first (before enabling in storage)
@@ -1802,9 +1828,20 @@ class App {
     const splashLogo = splash?.querySelector('.splash-logo');
     const navLogo = document.querySelector('.logo');
     
+    // If splash is disabled, skip animations and show content immediately
+    const splashEnabled = await storage.getSplashEnabled();
+    if (!splashEnabled) {
+      this.showContentWithoutSplash();
+      return;
+    }
+    
+    // Show splash screen if enabled (it's hidden by default in CSS)
+    if (splash) {
+      splash.style.display = 'flex';
+    }
+    
     if (splash && splashLogo && navLogo) {
-      // Wait for fade-in and pulse animation to complete (1s fade-in + 1s pulse + 0.2s delay = ~2.2s)
-      setTimeout(() => {
+      const startLogoMove = () => {
         // Calculate navbar logo position
         const navLogoRect = navLogo.getBoundingClientRect();
         const splashLogoRect = splashLogo.getBoundingClientRect();
@@ -1916,7 +1953,29 @@ class App {
             splashLogo.parentNode.removeChild(splashLogo);
           }
         }, 4700); // After splash screen fade-out completes (3500ms start + 1200ms transition duration)
-      },2200);
+      };
+
+      // Start movement only after the pulse animation has finished (returned to scale(1))
+      let movementStarted = false;
+      const ensureMovement = () => {
+        if (movementStarted) return;
+        movementStarted = true;
+        startLogoMove();
+      };
+
+      const onAnimationEnd = (e) => {
+        if (e.animationName === 'splashLogoPulse') {
+          splashLogo.removeEventListener('animationend', onAnimationEnd);
+          ensureMovement();
+        }
+      };
+
+      splashLogo.addEventListener('animationend', onAnimationEnd);
+
+      // Fallback: if animationend does not fire, start after safe delay (> pulse end)
+      setTimeout(() => {
+        ensureMovement();
+      }, 2500); // Pulse ends ~2.2s (1.2s delay + 1s duration) -> add buffer
     }
     
     // Also handle OS splash screen if available
@@ -1932,7 +1991,7 @@ class App {
           } catch (e) {
             console.log('SplashScreen plugin not available:', e);
           }
-        }, 2200);
+        }, 2400); // Match the delay in hideSplashScreen
       }
     } catch (e) {
       // SplashScreen plugin not available, that's okay
@@ -1944,6 +2003,11 @@ class App {
   async toggleHapticFeedback(enabled) {
     // Don't use haptic feedback here to avoid infinite loop
     await storage.setHapticFeedbackEnabled(enabled);
+  }
+
+  async toggleSplash(enabled) {
+    this.hapticFeedback('light');
+    await storage.setSplashEnabled(enabled);
   }
 
   async toggleTeacherMode(enabled) {
@@ -2483,6 +2547,9 @@ class App {
 
     const hapticFeedbackEnabled = await storage.getHapticFeedbackEnabled();
     document.getElementById('hapticFeedbackToggle').checked = hapticFeedbackEnabled;
+
+    const splashEnabled = await storage.getSplashEnabled();
+    document.getElementById('splashToggle').checked = splashEnabled;
 
     const teacherMode = await storage.getTeacherMode();
     document.getElementById('teacherModeToggle').checked = teacherMode;

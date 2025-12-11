@@ -17,7 +17,8 @@ const STORAGE_KEYS = {
   HOUR_OFFSETS: 'hour_offsets',
   IGNORED_HOURS: 'ignored_hours',
   AMOLED_MODE: 'amoled_mode',
-  HAPTIC_FEEDBACK_ENABLED: 'haptic_feedback_enabled'
+  HAPTIC_FEEDBACK_ENABLED: 'haptic_feedback_enabled',
+  SPLASH_ENABLED: 'splash_enabled'
 };
 
 // Get Preferences API (web or native)
@@ -515,6 +516,29 @@ class StorageManager {
       return true;
     } catch (error) {
       console.error('Error setting haptic feedback:', error);
+      return false;
+    }
+  }
+
+  async getSplashEnabled() {
+    try {
+      await this.init();
+      const { value } = await this.preferences.get({ key: STORAGE_KEYS.SPLASH_ENABLED });
+      // Default to false (splash disabled by default)
+      return value === 'true';
+    } catch (error) {
+      console.error('Error getting splash setting:', error);
+      return false;
+    }
+  }
+
+  async setSplashEnabled(enabled) {
+    try {
+      await this.init();
+      await this.preferences.set({ key: STORAGE_KEYS.SPLASH_ENABLED, value: enabled.toString() });
+      return true;
+    } catch (error) {
+      console.error('Error setting splash setting:', error);
       return false;
     }
   }
