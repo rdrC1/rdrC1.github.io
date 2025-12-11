@@ -3,10 +3,49 @@ class PWAInstallManager {
   constructor() {
     this.deferredPrompt = null;
     this.installButton = null;
+    this.isNative = false;
     this.init();
   }
 
-  init() {
+  async checkIfNative() {
+    // Check if running as native app (Capacitor)
+    try {
+      if (typeof window !== 'undefined' && window.Capacitor) {
+        const isNative = window.Capacitor.isNativePlatform();
+        if (isNative) {
+          this.isNative = true;
+          return true;
+        }
+      }
+      
+      try {
+        const CapacitorModule = await import('@capacitor/core');
+        if (CapacitorModule && CapacitorModule.Capacitor) {
+          const isNative = CapacitorModule.Capacitor.isNativePlatform();
+          if (isNative) {
+            this.isNative = true;
+            return true;
+          }
+        }
+      } catch (e) {
+        // Capacitor not available, not native
+      }
+    } catch (e) {
+      // Error checking, assume not native
+    }
+    
+    this.isNative = false;
+    return false;
+  }
+
+  async init() {
+    // Don't initialize if running as native app
+    const isNative = await this.checkIfNative();
+    if (isNative) {
+      console.log('[PWA] Running as native app, skipping PWA install manager');
+      return;
+    }
+
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', (e) => {
       console.log('[PWA] beforeinstallprompt event fired');
@@ -34,6 +73,11 @@ class PWAInstallManager {
   }
 
   detectIOSInstall() {
+    // Don't show iOS instructions if native app
+    if (this.isNative) {
+      return;
+    }
+    
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
     
@@ -44,6 +88,11 @@ class PWAInstallManager {
   }
 
   showInstallButton() {
+    // Don't show if native app
+    if (this.isNative) {
+      return;
+    }
+    
     // Create install button if it doesn't exist
     if (!this.installButton) {
       this.installButton = document.createElement('button');
@@ -55,10 +104,43 @@ class PWAInstallManager {
       `;
       this.installButton.addEventListener('click', () => this.installApp());
       
-      // Add to header or bottom nav
-      const header = document.querySelector('.app-header');
-      if (header) {
-        header.appendChild(this.installButton);
+      // Add to settings page instead of header
+      const settingsPage = document.getElementById('settingsPage');
+      if (settingsPage) {
+        // Find the credits section or add before it
+        const creditsSection = settingsPage.querySelector('.credits-section');
+        if (creditsSection) {
+          // Create a new settings section for PWA install
+          const pwaSection = document.createElement('div');
+          pwaSection.className = 'settings-section';
+          pwaSection.innerHTML = `
+            <h3 class="section-title">Alkalmazás telepítése</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">PWA telepítés</span>
+                <span class="setting-description">Telepítsd az alkalmazást a kezdőképernyőre, hogy gyorsabban elérhesd</span>
+              </div>
+            </div>
+          `;
+          pwaSection.querySelector('.setting-item').appendChild(this.installButton);
+          settingsPage.querySelector('.page-content').insertBefore(pwaSection, creditsSection);
+        } else {
+          // If no credits section, add at the end
+          const pageContent = settingsPage.querySelector('.page-content');
+          const pwaSection = document.createElement('div');
+          pwaSection.className = 'settings-section';
+          pwaSection.innerHTML = `
+            <h3 class="section-title">Alkalmazás telepítése</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">PWA telepítés</span>
+                <span class="setting-description">Telepítsd az alkalmazást a kezdőképernyőre, hogy gyorsabban elérhesd</span>
+              </div>
+            </div>
+          `;
+          pwaSection.querySelector('.setting-item').appendChild(this.installButton);
+          pageContent.appendChild(pwaSection);
+        }
       }
     }
     

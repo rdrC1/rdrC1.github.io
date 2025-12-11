@@ -188,8 +188,160 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
+// Scheduled notifications storage
+const NOTIFICATIONS_DB = 'notifications-db';
+const NOTIFICATIONS_STORE = 'scheduled-notifications';
+
+// Initialize IndexedDB for notifications
+async function initNotificationsDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(NOTIFICATIONS_DB, 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(NOTIFICATIONS_STORE)) {
+        const store = db.createObjectStore(NOTIFICATIONS_STORE, { keyPath: 'id' });
+        store.createIndex('time', 'time', { unique: false });
+      }
+    };
+  });
+}
+
+// Store scheduled notification
+async function storeNotification(notification) {
+  try {
+    const db = await initNotificationsDB();
+    const transaction = db.transaction([NOTIFICATIONS_STORE], 'readwrite');
+    const store = transaction.objectStore(NOTIFICATIONS_STORE);
+    await store.put(notification);
+    console.log('[Service Worker] Notification stored:', notification.id);
+  } catch (error) {
+    console.error('[Service Worker] Error storing notification:', error);
+  }
+}
+
+// Get all scheduled notifications
+async function getScheduledNotifications() {
+  try {
+    const db = await initNotificationsDB();
+    const transaction = db.transaction([NOTIFICATIONS_STORE], 'readonly');
+    const store = transaction.objectStore(NOTIFICATIONS_STORE);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error('[Service Worker] Error getting notifications:', error);
+    return [];
+  }
+}
+
+// Remove notification
+async function removeNotification(id) {
+  try {
+    const db = await initNotificationsDB();
+    const transaction = db.transaction([NOTIFICATIONS_STORE], 'readwrite');
+    const store = transaction.objectStore(NOTIFICATIONS_STORE);
+    await store.delete(id);
+    console.log('[Service Worker] Notification removed:', id);
+  } catch (error) {
+    console.error('[Service Worker] Error removing notification:', error);
+  }
+}
+
+// Active timeouts for notifications
+const activeTimeouts = new Map();
+
+// Check and show due notifications
+async function checkScheduledNotifications() {
+  const now = Date.now();
+  const notifications = await getScheduledNotifications();
+  
+  for (const notification of notifications) {
+    const delay = notification.time - now;
+    
+    if (delay <= 0) {
+      // Show notification immediately if due
+      await self.registration.showNotification(notification.title, {
+        body: notification.body,
+        icon: notification.icon || '/logo.webp',
+        badge: notification.badge || '/androidlogo.webp',
+        tag: notification.tag || 'room-change',
+        requireInteraction: notification.requireInteraction || false,
+        vibrate: notification.vibrate || [200, 100, 200],
+        data: notification.data || {}
+      });
+      
+      // Remove from storage
+      await removeNotification(notification.id);
+      
+      // Clear timeout if exists
+      if (activeTimeouts.has(notification.id)) {
+        clearTimeout(activeTimeouts.get(notification.id));
+        activeTimeouts.delete(notification.id);
+      }
+    } else if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
+      // If due within 24 hours and not already scheduled, set timeout
+      if (!activeTimeouts.has(notification.id)) {
+        const timeoutId = setTimeout(async () => {
+          await self.registration.showNotification(notification.title, {
+            body: notification.body,
+            icon: notification.icon || '/logo.webp',
+            badge: notification.badge || '/androidlogo.webp',
+            tag: notification.tag || 'room-change',
+            requireInteraction: notification.requireInteraction || false,
+            vibrate: notification.vibrate || [200, 100, 200],
+            data: notification.data || {}
+          });
+          
+          await removeNotification(notification.id);
+          activeTimeouts.delete(notification.id);
+        }, delay);
+        
+        activeTimeouts.set(notification.id, timeoutId);
+        console.log(`[Service Worker] Scheduled notification ${notification.id} in ${Math.round(delay / 1000)}s`);
+      }
+    }
+  }
+}
+
+// Periodic check for scheduled notifications (every minute when active)
+// Note: On iOS, this may not run when app is closed, but will run when app opens
+let checkInterval = null;
+
+function startPeriodicCheck() {
+  if (checkInterval) {
+    clearInterval(checkInterval);
+  }
+  
+  // Check immediately
+  checkScheduledNotifications();
+  
+  // Then check every minute
+  checkInterval = setInterval(() => {
+    checkScheduledNotifications();
+  }, 60000); // Check every minute
+}
+
+// Start periodic check when service worker activates
+self.addEventListener('activate', async (event) => {
+  event.waitUntil(
+    Promise.all([
+      checkScheduledNotifications(),
+      startPeriodicCheck()
+    ])
+  );
+});
+
+// Also check when service worker starts
+startPeriodicCheck();
+
 // Message event handler (for communication with main app)
-self.addEventListener('message', (event) => {
+self.addEventListener('message', async (event) => {
   console.log('[Service Worker] Message received:', event.data);
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -202,6 +354,54 @@ self.addEventListener('message', (event) => {
         return cache.addAll(event.data.urls);
       })
     );
+  }
+  
+  // Schedule notification via Service Worker
+  if (event.data && event.data.type === 'SCHEDULE_NOTIFICATION') {
+    const notification = event.data.notification;
+    await storeNotification(notification);
+    console.log('[Service Worker] Notification scheduled:', notification.id);
+    
+    // Check and schedule timeout immediately
+    await checkScheduledNotifications();
+  }
+  
+  // Cancel notification
+  if (event.data && event.data.type === 'CANCEL_NOTIFICATION') {
+    await removeNotification(event.data.id);
+  }
+  
+  // Cancel all notifications
+  if (event.data && event.data.type === 'CANCEL_ALL_NOTIFICATIONS') {
+    const notifications = await getScheduledNotifications();
+    for (const notification of notifications) {
+      await removeNotification(notification.id);
+      // Clear timeout if exists
+      if (activeTimeouts.has(notification.id)) {
+        clearTimeout(activeTimeouts.get(notification.id));
+        activeTimeouts.delete(notification.id);
+      }
+    }
+  }
+  
+  // Cancel specific notification
+  if (event.data && event.data.type === 'CANCEL_NOTIFICATION') {
+    await removeNotification(event.data.id);
+    if (activeTimeouts.has(event.data.id)) {
+      clearTimeout(activeTimeouts.get(event.data.id));
+      activeTimeouts.delete(event.data.id);
+    }
+  }
+  
+  // Check notifications now
+  if (event.data && event.data.type === 'CHECK_NOTIFICATIONS') {
+    await checkScheduledNotifications();
+  }
+  
+  // App activated - check notifications immediately
+  if (event.data && event.data.type === 'APP_ACTIVATED') {
+    await checkScheduledNotifications();
+    startPeriodicCheck();
   }
 });
 

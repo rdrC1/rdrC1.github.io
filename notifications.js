@@ -413,7 +413,23 @@ class NotificationManager {
   async cancelAllNotifications() {
     try {
       const notifications = await this.init();
-      if (!notifications) return;
+      
+      // Cancel Service Worker notifications
+      if (notifications === 'web' && 'serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.active.postMessage({
+            type: 'CANCEL_ALL_NOTIFICATIONS'
+          });
+          console.log('[Notifications] All notifications cancelled via Service Worker');
+        } catch (error) {
+          console.error('[Notifications] Error canceling via Service Worker:', error);
+        }
+      }
+      
+      if (!notifications || notifications === 'web') {
+        return;
+      }
 
       const pending = await notifications.getPending();
       if (pending && pending.notifications && pending.notifications.length > 0) {
@@ -597,13 +613,20 @@ class NotificationManager {
     // Not needed anymore - kept for compatibility
   }
 
-  // Web Notification scheduling for PWA
+  // Web Notification scheduling for PWA via Service Worker
   async scheduleWebNotification(change, targetDate) {
     if (!('Notification' in window)) {
       return;
     }
     
     if (Notification.permission !== 'granted') {
+      return;
+    }
+    
+    // Check if Service Worker is available
+    if (!('serviceWorker' in navigator)) {
+      console.warn('[Notifications] Service Worker not available, using fallback');
+      await this.scheduleWebNotificationFallback(change, targetDate);
       return;
     }
     
@@ -621,9 +644,79 @@ class NotificationManager {
       return;
     }
     
+    // Prepare notification data
+    let displayTime = '';
+    let displayClassNumber = change.classNumber.toString();
+    
+    if (offset) {
+      displayTime = `${offset.startTime} - ${offset.endTime}`;
+      if (offset.displayAs) {
+        displayClassNumber = offset.displayAs;
+      }
+    } else {
+      const classTime = CLASS_TIMES.find(ct => ct.number === change.classNumber);
+      if (classTime) {
+        displayTime = `${classTime.start} - ${classTime.end}`;
+      }
+    }
+    
+    const title = `${displayClassNumber}. óra - Teremváltozás`;
+    let body = `${change.group ? change.group + ' - ' : ''}${change.teacher || 'Ismeretlen tanár'} → Terem: ${change.newRoom || 'Ismeretlen'}`;
+    if (displayTime) {
+      body += ` (${displayTime})`;
+    }
+    
+    const notificationId = this.getNotificationId(change);
+    const notificationTime = notificationDate.getTime();
+    
+    // Send to Service Worker for scheduling
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.active.postMessage({
+        type: 'SCHEDULE_NOTIFICATION',
+        notification: {
+          id: notificationId,
+          time: notificationTime,
+          title: title,
+          body: body,
+          icon: '/logo.webp',
+          badge: '/androidlogo.webp',
+          tag: `room-change-${change.classNumber}`,
+          requireInteraction: false,
+          vibrate: [200, 100, 200],
+          data: {
+            changeId: change.id,
+            classNumber: change.classNumber,
+            date: targetDate.toISOString().split('T')[0]
+          }
+        }
+      });
+      
+      console.log(`[Notifications] Notification scheduled via Service Worker for ${change.classNumber}. óra on ${targetDate.toISOString().split('T')[0]} at ${previousClassEnd.hours}:${String(previousClassEnd.minutes).padStart(2, '0')}`);
+    } catch (error) {
+      console.error('[Notifications] Error scheduling via Service Worker, using fallback:', error);
+      await this.scheduleWebNotificationFallback(change, targetDate);
+    }
+  }
+  
+  // Fallback for when Service Worker is not available
+  async scheduleWebNotificationFallback(change, targetDate) {
+    const dayName = this.getDayNameForStorage(targetDate);
+    const offset = await this.getOffsetTime(dayName, change.classNumber);
+    const previousClassEnd = this.getPreviousClassEndTime(change.classNumber, offset);
+    if (!previousClassEnd) return;
+    
+    const notificationDate = new Date(targetDate);
+    notificationDate.setHours(previousClassEnd.hours, previousClassEnd.minutes, 0, 0);
+    
+    const now = new Date();
+    if (notificationDate <= now) {
+      return;
+    }
+    
     const delay = notificationDate.getTime() - now.getTime();
     
-    // Use setTimeout for scheduling (limited but works for PWA)
+    // Use setTimeout as fallback (only works when app is active)
     setTimeout(() => {
       let displayTime = '';
       let displayClassNumber = change.classNumber.toString();
@@ -681,6 +774,7 @@ class NotificationManager {
       
       const testDate = new Date();
       testDate.setSeconds(testDate.getSeconds() + 8);
+      const testTime = testDate.getTime();
       
       const testClassNumber = Math.floor(Math.random() * 9) + 1;
       const testRooms = ['6', '18', 'fizikai', 'kémiai', 'biológiai', 'Nivák Zuse', 'könyvtár'];
@@ -694,6 +788,36 @@ class NotificationManager {
       const title = `${testClassNumber}. óra - Teremváltozás (TESZT)`;
       const body = `${testGroup} - ${testTeacher} → Terem: ${testRoom}`;
       
+      // Try to schedule via Service Worker first
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.active.postMessage({
+            type: 'SCHEDULE_NOTIFICATION',
+            notification: {
+              id: 99999,
+              time: testTime,
+              title: title,
+              body: body,
+              icon: '/logo.webp',
+              badge: '/androidlogo.webp',
+              tag: 'test-notification',
+              requireInteraction: false,
+              vibrate: [200, 100, 200],
+              data: {
+                test: true,
+                classNumber: testClassNumber
+              }
+            }
+          });
+          console.log('[Notifications] Test notification scheduled via Service Worker');
+          return;
+        } catch (error) {
+          console.error('[Notifications] Error scheduling via Service Worker, using fallback:', error);
+        }
+      }
+      
+      // Fallback to setTimeout (only works when app is active)
       setTimeout(() => {
         new Notification(title, {
           body: body,
