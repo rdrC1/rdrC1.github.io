@@ -16,7 +16,8 @@ const STORAGE_KEYS = {
   ALL_GROUPS: 'all_groups',
   HOUR_OFFSETS: 'hour_offsets',
   IGNORED_HOURS: 'ignored_hours',
-  AMOLED_MODE: 'amoled_mode'
+  AMOLED_MODE: 'amoled_mode',
+  HAPTIC_FEEDBACK_ENABLED: 'haptic_feedback_enabled'
 };
 
 // Get Preferences API (web or native)
@@ -491,6 +492,29 @@ class StorageManager {
       return true;
     } catch (error) {
       console.error('Error setting AMOLED mode:', error);
+      return false;
+    }
+  }
+
+  async getHapticFeedbackEnabled() {
+    try {
+      await this.init();
+      const { value } = await this.preferences.get({ key: STORAGE_KEYS.HAPTIC_FEEDBACK_ENABLED });
+      // Default to true if not set (backward compatibility)
+      return value === null ? true : value === 'true';
+    } catch (error) {
+      console.error('Error getting haptic feedback setting:', error);
+      return true; // Default to enabled
+    }
+  }
+
+  async setHapticFeedbackEnabled(enabled) {
+    try {
+      await this.init();
+      await this.preferences.set({ key: STORAGE_KEYS.HAPTIC_FEEDBACK_ENABLED, value: enabled.toString() });
+      return true;
+    } catch (error) {
+      console.error('Error setting haptic feedback:', error);
       return false;
     }
   }

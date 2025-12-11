@@ -426,6 +426,11 @@ class App {
       this.testNotification();
     });
 
+    // Haptic feedback toggle
+    document.getElementById('hapticFeedbackToggle').addEventListener('change', (e) => {
+      this.toggleHapticFeedback(e.target.checked);
+    });
+
     // Teacher mode toggle
     document.getElementById('teacherModeToggle').addEventListener('change', (e) => {
       this.toggleTeacherMode(e.target.checked);
@@ -1748,8 +1753,35 @@ class App {
   }
 
   // Haptic feedback helper
-  hapticFeedback(type = 'light') {
+  async hapticFeedback(type = 'light') {
     try {
+      // Check if haptic feedback is enabled
+      const enabled = await storage.getHapticFeedbackEnabled();
+      if (!enabled) {
+        return;
+      }
+
+      // Try Capacitor Haptics plugin first (native)
+      try {
+        const { Haptics } = await import('@capacitor/haptics');
+        if (Haptics) {
+          // Map our types to Capacitor impact styles
+          const impactStyles = {
+            light: Haptics.ImpactStyle.Light,
+            medium: Haptics.ImpactStyle.Medium,
+            heavy: Haptics.ImpactStyle.Heavy
+          };
+          
+          const impactStyle = impactStyles[type] || Haptics.ImpactStyle.Light;
+          await Haptics.impact({ style: impactStyle });
+          return;
+        }
+      } catch (e) {
+        // Capacitor Haptics not available, fall back to web API
+        console.log('Capacitor Haptics not available, using fallback:', e);
+      }
+
+      // Fallback to web Vibration API
       if (navigator.vibrate) {
         const patterns = {
           light: 10,
@@ -1760,6 +1792,7 @@ class App {
       }
     } catch (e) {
       // Ignore errors
+      console.log('Haptic feedback error:', e);
     }
   }
 
@@ -1908,6 +1941,11 @@ class App {
   }
 
   // Teacher mode methods
+  async toggleHapticFeedback(enabled) {
+    // Don't use haptic feedback here to avoid infinite loop
+    await storage.setHapticFeedbackEnabled(enabled);
+  }
+
   async toggleTeacherMode(enabled) {
     this.hapticFeedback('light');
     await storage.setTeacherMode(enabled);
@@ -2442,6 +2480,9 @@ class App {
   async loadSettings() {
     const notificationsEnabled = await storage.getNotificationsEnabled();
     document.getElementById('notificationToggle').checked = notificationsEnabled;
+
+    const hapticFeedbackEnabled = await storage.getHapticFeedbackEnabled();
+    document.getElementById('hapticFeedbackToggle').checked = hapticFeedbackEnabled;
 
     const teacherMode = await storage.getTeacherMode();
     document.getElementById('teacherModeToggle').checked = teacherMode;
