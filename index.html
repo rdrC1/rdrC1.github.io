@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="color-scheme" content="light dark">
+    <title>reTerem</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="reTerem">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="reTerem">
+    <meta name="description" content="Iskolai teremmódosítások kezelő alkalmazás">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#6750A4">
+    
+    <!-- iOS Safari Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="reTerem">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" href="androidlogo.webp">
+    <link rel="apple-touch-icon" href="logo.webp">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.webp">
+    <link rel="apple-touch-icon" sizes="192x192" href="logo.webp">
+    <link rel="apple-touch-icon" sizes="512x512" href="androidlogo.webp">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <img src="logo.webp" alt="reTerem" class="splash-logo">
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <button class="theme-toggle" id="themeToggle" aria-label="Téma váltás">
+                <span class="material-symbols-outlined">dark_mode</span>
+            </button>
+            <h1 class="app-title"><img src="logo.webp" alt="reTerem" class="logo"></h1>
+            <button class="upload-btn" id="refreshBtn" aria-label="Teremváltozások frissítése">
+                <span class="material-symbols-outlined">refresh</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Daily Summary Page -->
+        <section class="page active" id="dailyPage">
+            <div class="page-content">
+                <div class="summary-container" id="summaryContainer">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Betöltés...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Management Page -->
+        <section class="page" id="managementPage">
+            <div class="page-content">
+                <h2 class="page-title">Adatkezelés</h2>
+                <div class="pdf-list" id="pdfList">
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined">event_busy</span>
+                        <p>Még nincs teremváltozás</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section class="page" id="settingsPage">
+            <div class="page-content">
+                <h2 class="page-title">Beállítások</h2>
+                
+                <div class="settings-section">
+                    <h3 class="section-title">Értesítések</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Teremváltozási értesítések</span>
+                            <span class="setting-description">Értesítések a teremmódosításokról</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="notificationToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Értesítések tesztelése</span>
+                            <span class="setting-description">8 másodperc múlva küld egy teszt értesítést</span>
+                        </div>
+                        <button class="btn-secondary" id="testNotificationBtn">
+                            <span class="material-symbols-outlined">notifications_active</span>
+                            Teszt értesítés küldése
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="section-title">Módváltás</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Tanár üzemmód</span>
+                            <span class="setting-description">Tanárok szerinti szűrés csoportok helyett</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="teacherModeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section" id="classesSection">
+                    <h3 class="section-title">Csoportok</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Csoport kiválasztása</span>
+                            <span class="setting-description">Válaszd ki az csoportokat</span>
+                        </div>
+                        <button class="btn-secondary" id="selectClassesBtn">
+                            <span class="material-symbols-outlined">group</span>
+                            Csoportok kiválasztása
+                        </button>
+                    </div>
+                    <div class="selected-classes" id="selectedClasses">
+                        <p class="no-classes">Nincs kiválasztott csoport</p>
+                    </div>
+                </div>
+
+                <div class="settings-section" id="addClassSection">
+                    <h3 class="section-title">Új csoport hozzáadása</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Csoport hozzáadása</span>
+                            <span class="setting-description">Hozzáadhatsz csoportokat, amelyek még nem jelentek meg teremmódosításban, de később felhasználhatók</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 12px;">
+                            <input type="text" id="addClassInput" placeholder="Új csoport (pl. 11G1)" style="flex: 1; padding: 12px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font-size: 14px;">
+                            <button class="btn-secondary" id="addClassBtn" style="padding: 12px 16px; min-width: auto;">
+                                <span class="material-symbols-outlined">add</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section" id="teachersSection" style="display: none;">
+                    <h3 class="section-title">Tanárok</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Tanár kiválasztása</span>
+                            <span class="setting-description">Válaszd ki a tanárokat</span>
+                        </div>
+                        <button class="btn-secondary" id="selectTeachersBtn">
+                            <span class="material-symbols-outlined">person</span>
+                            Tanárok kiválasztása
+                        </button>
+                    </div>
+                    <div class="selected-classes" id="selectedTeachers">
+                        <p class="no-classes">Nincs kiválasztott tanár</p>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="section-title">Óra eltolások</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Óra eltolások beállítása</span>
+                            <span class="setting-description">Testreszabott óraidők és megjelenítési számok beállítása napokra (pl. szerdán a 8. óra 14:00-kor kezdődik és "8-9"-ként jelenik meg)</span>
+                        </div>
+                        <button class="btn-secondary" id="manageHourOffsetsBtn">
+                            <span class="material-symbols-outlined">schedule</span>
+                            Eltolások beállítása
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="section-title">Évváltás</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label">Adatok törlése és új év betöltése</span>
+                            <span class="setting-description">Törli az összes csoportot, tanárt és teremmódosítást, majd betölti az új évi adatokat</span>
+                        </div>
+                        <button class="btn-secondary" id="yearTransitionBtn" style="background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);">
+                            <span class="material-symbols-outlined">delete_sweep</span>
+                            Évváltás
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section credits-section">
+                    <div class="credits-content">
+                        <p class="credits-text">Brought to you by <strong>rdrCode</strong> & <strong>NDXCode</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-page="dailyPage">
+            <span class="material-symbols-outlined">today</span>
+            <span class="nav-label">Napi</span>
+        </button>
+        <button class="nav-item" data-page="managementPage">
+            <span class="material-symbols-outlined">storage</span>
+            <span class="nav-label">Adatok</span>
+        </button>
+        <button class="nav-item" data-page="settingsPage">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="nav-label">Beállítások</span>
+        </button>
+    </nav>
+
+
+    <!-- Class Selector Modal -->
+    <div class="modal" id="classSelectorModal">
+        <div class="modal-backdrop" id="classSelectorModalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Csoportok kiválasztása</h2>
+                <button class="modal-close" id="closeClassSelectorModal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="classSearch" placeholder="Csoport keresése...">
+                </div>
+                <div class="class-list" id="classList">
+                    <!-- Classes will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelClassSelectorBtn">Mégse</button>
+                <button class="btn-primary" id="confirmClassSelectorBtn">Mentés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Selector Modal -->
+    <div class="modal" id="teacherSelectorModal">
+        <div class="modal-backdrop" id="teacherSelectorModalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tanárok kiválasztása</h2>
+                <button class="modal-close" id="closeTeacherSelectorModal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="teacherSearch" placeholder="Tanár keresése...">
+                </div>
+                <div class="class-list" id="teacherList">
+                    <!-- Teachers will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelTeacherSelectorBtn">Mégse</button>
+                <button class="btn-primary" id="confirmTeacherSelectorBtn">Mentés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hour Offsets Modal -->
+    <div class="modal" id="hourOffsetsModal">
+        <div class="modal-backdrop" id="hourOffsetsModalBackdrop"></div>
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 100%;">
+            <div class="modal-header">
+                <h2>Óra eltolások beállítása</h2>
+                <button class="modal-close" id="closeHourOffsetsModal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="hourOffsetsModalBody">
+                <!-- Hour offsets will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelHourOffsetsBtn">Mégse</button>
+                <button class="btn-primary" id="saveHourOffsetsBtn">Mentés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year Transition Confirmation Modal -->
+    <div class="modal" id="yearTransitionModal">
+        <div class="modal-backdrop" id="yearTransitionModalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Évváltás megerősítése</h2>
+                <button class="modal-close" id="closeYearTransitionModal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--md-sys-color-on-surface);">
+                    Biztosan törölni szeretnéd az összes adatot?
+                </p>
+                <p style="margin-bottom: 16px; color: var(--md-sys-color-on-surface-variant); font-size: 14px;">
+                    Ez a művelet törli:
+                </p>
+                <ul style="margin-left: 20px; margin-bottom: 16px; color: var(--md-sys-color-on-surface-variant); font-size: 14px;">
+                    <li>Minden csoport és tanár</li>
+                    <li>Minden teremmódosítás</li>
+                    <li>Kiválasztott csoportok és tanárok</li>
+                    <li>Cache-elt adatok</li>
+                </ul>
+                <p style="color: var(--md-sys-color-error); font-size: 14px; font-weight: 500;">
+                    ⚠️ Ez a művelet nem visszavonható!
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelYearTransitionBtn">Mégse</button>
+                <button class="btn-primary" id="confirmYearTransitionBtn" style="background: var(--md-sys-color-error); color: var(--md-sys-color-on-error);">
+                    <span class="material-symbols-outlined">delete_sweep</span>
+                    Törlés és új év betöltése
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Changes Details Modal -->
+    <div class="modal" id="roomChangesDetailsModal">
+        <div class="modal-backdrop" id="roomChangesDetailsModalBackdrop"></div>
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 100%;">
+            <div class="modal-header">
+                <h2 id="roomChangesDetailsTitle">Teremváltozás részletei</h2>
+                <button class="modal-close" id="closeRoomChangesDetailsModal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="roomChangesDetailsBody">
+                <div class="search-box" style="margin-bottom: 16px;">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="roomChangesClassFilter" placeholder="Csoport szűrése...">
+                </div>
+                <div id="roomChangesDetailsList">
+                    <!-- Changes will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="closeRoomChangesDetailsBtn">Bezárás</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script src="pwa-install.js"></script>
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('[PWA] Service Worker registered:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available
+                                    console.log('[PWA] New service worker available');
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('[PWA] Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>
+
