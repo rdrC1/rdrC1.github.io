@@ -51,7 +51,7 @@
       "url": "/#managementPage",
       "icons": [
         {
-          "src": "logo.webp",
+          "src": "androidlogo.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }
@@ -64,7 +64,7 @@
       "url": "/#settingsPage",
       "icons": [
         {
-          "src": "logo.webp",
+          "src": "androidlogo.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }
