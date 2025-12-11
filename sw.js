@@ -12,7 +12,7 @@ const PRECACHE_ASSETS = [
   '/jsonParser.js',
   '/pdfParser.js',
   '/notifications.js',
-  '/logo.webp',
+  '/androidlogo.webp',
   '/androidlogo.webp',
   'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap',
   'https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined'
@@ -121,7 +121,7 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'reTerem',
     body: 'Új teremváltozás',
-    icon: '/logo.webp',
+    icon: '/androidlogo.webp',
     badge: '/androidlogo.webp',
     tag: 'room-change',
     requireInteraction: false,
@@ -268,7 +268,7 @@ async function checkScheduledNotifications() {
       // Show notification immediately if due
       await self.registration.showNotification(notification.title, {
         body: notification.body,
-        icon: notification.icon || '/logo.webp',
+        icon: notification.icon || '/androidlogo.webp',
         badge: notification.badge || '/androidlogo.webp',
         tag: notification.tag || 'room-change',
         requireInteraction: notification.requireInteraction || false,
@@ -290,7 +290,7 @@ async function checkScheduledNotifications() {
         const timeoutId = setTimeout(async () => {
           await self.registration.showNotification(notification.title, {
             body: notification.body,
-            icon: notification.icon || '/logo.webp',
+            icon: notification.icon || '/androidlogo.webp',
             badge: notification.badge || '/androidlogo.webp',
             tag: notification.tag || 'room-change',
             requireInteraction: notification.requireInteraction || false,

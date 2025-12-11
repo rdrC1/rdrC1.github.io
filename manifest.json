@@ -10,7 +10,7 @@
   "scope": "/",
   "icons": [
     {
-      "src": "logo.webp",
+      "src": "androidlogo.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any maskable"
@@ -22,7 +22,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "logo.webp",
+      "src": "androidlogo.webp",
       "sizes": "180x180",
       "type": "image/webp",
       "purpose": "apple-touch-icon"
@@ -38,7 +38,7 @@
       "url": "/#dailyPage",
       "icons": [
         {
-          "src": "logo.webp",
+          "src": "androidlogo.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }

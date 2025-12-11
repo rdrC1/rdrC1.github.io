@@ -679,7 +679,7 @@ class NotificationManager {
           time: notificationTime,
           title: title,
           body: body,
-          icon: '/logo.webp',
+          icon: '/androidlogo.webp',
           badge: '/androidlogo.webp',
           tag: `room-change-${change.classNumber}`,
           requireInteraction: false,
@@ -741,7 +741,7 @@ class NotificationManager {
       
       new Notification(title, {
         body: body,
-        icon: '/logo.webp',
+        icon: '/androidlogo.webp',
         badge: '/androidlogo.webp',
         tag: `room-change-${change.classNumber}`,
         requireInteraction: false,
@@ -799,7 +799,7 @@ class NotificationManager {
               time: testTime,
               title: title,
               body: body,
-              icon: '/logo.webp',
+              icon: '/androidlogo.webp',
               badge: '/androidlogo.webp',
               tag: 'test-notification',
               requireInteraction: false,
@@ -821,7 +821,7 @@ class NotificationManager {
       setTimeout(() => {
         new Notification(title, {
           body: body,
-          icon: '/logo.webp',
+          icon: '/androidlogo.webp',
           badge: '/androidlogo.webp',
           tag: 'test-notification',
           requireInteraction: false,
