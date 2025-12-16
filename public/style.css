@@ -1,0 +1,654 @@
+:root {
+    /* Light Theme (Whiter) */
+    --bg-color: #FAFAFA;
+    /* Much whiter than before */
+    --surface-color: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-secondary: #5F5F5F;
+    --accent-color: #C07F00;
+    --accent-hover: #A06900;
+    --border-color: #E5E5E5;
+    --input-bg: #FFFFFF;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+[data-theme="dark"] {
+    /* AMOLED Black Theme */
+    --bg-color: #000000;
+    --surface-color: #000000;
+    --text-primary: #EDEDED;
+    --text-secondary: #A0A0A0;
+    --accent-color: #FFB302;
+    --accent-hover: #FFD260;
+    --border-color: #333333;
+    --input-bg: #111111;
+
+    --shadow-sm: 0 0 0 1px #333;
+    --shadow-md: 0 0 0 1px #444;
+}
+
+/* Rest of CSS... */
+
+/* Secondary Button (Back btn) */
+.secondary-btn {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    margin-top: 2rem;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    border-color: var(--text-primary);
+    background-color: var(--surface-color);
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Dynamic viewport height for mobile browsers */
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    /* iOS safe area */
+
+    /* Disable text selection globally */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection in inputs and textareas */
+input,
+textarea,
+.content-body {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Navbar Wrapper - Full width sticky container */
+.navbar-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Header sections */
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.header-left {
+    justify-content: flex-start;
+}
+
+.header-right {
+    justify-content: flex-end;
+}
+
+.logo {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: -0.5px;
+    flex: 1;
+    text-align: center;
+}
+
+main {
+    flex: 1;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+}
+
+/* Typography */
+h1 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+h2,
+h3 {
+    margin-bottom: 1rem;
+}
+
+/* Buttons & Forms */
+button {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+}
+
+.add-form {
+    background: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Stack input group vertically on small screens or for textareas */
+.add-form.stack {
+    flex-direction: column;
+}
+
+input,
+textarea {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+}
+
+input:focus,
+textarea:focus {
+    outline: 2px solid var(--accent-color);
+    border-color: transparent;
+}
+
+button[type="submit"] {
+    background-color: var(--accent-color);
+    color: white;
+    /* Always white for contrast on accent */
+    font-weight: 600;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.1s;
+}
+
+button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+/* Theme Toggle */
+#theme-toggle {
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 50%;
+}
+
+[data-theme="light"] .icon-moon {
+    display: block;
+}
+
+[data-theme="light"] .icon-sun {
+    display: none;
+}
+
+[data-theme="dark"] .icon-sun {
+    display: block;
+}
+
+[data-theme="dark"] .icon-moon {
+    display: none;
+}
+
+/* Views & States */
+.hidden-view {
+    display: none;
+}
+
+.active-view {
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cards (Classes & Subjects) */
+.card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    /* Single column to match form width */
+    gap: 1rem;
+}
+
+.card {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-color);
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* Materials List */
+.list-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.material-item {
+    background-color: var(--surface-color);
+    padding: 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.material-item:hover {
+    border-color: var(--accent-color);
+}
+
+/* Reader Mode Article */
+article {
+    max-width: 680px;
+    margin: 0 auto;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    padding: 0;
+    /* No extra padding */
+}
+
+.reader-header {
+    border-bottom: 2px solid var(--accent-color);
+    padding: 0 0 1.5rem 0;
+    /* No left padding */
+    margin: 0 0 2rem 0;
+    display: block;
+    text-align: left;
+}
+
+.reader-header h1 {
+    margin: 0 0 0.25rem 0;
+    padding: 0;
+    text-align: left;
+    text-indent: 0;
+    /* No indent */
+}
+
+.meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    display: block;
+    text-indent: 0;
+}
+
+.content-body {
+    padding: 0;
+    margin: 0;
+}
+
+.content-body p {
+    margin: 0 0 1.5rem 0;
+    padding: 0;
+    line-height: 1.8;
+    text-align: left;
+}
+
+/* Navigation Breadcrumbs */
+#breadcrumbs {
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+#breadcrumbs button {
+    color: var(--accent-color);
+    font-weight: 600;
+    padding: 0;
+}
+
+.separator {
+    margin: 0 0.5rem;
+}
+
+/* Admin / Lock Icon */
+#admin-lock {
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+    margin-right: 1rem;
+    /* Space between lock and logo/others */
+}
+
+#admin-lock:hover,
+#admin-lock.unlocked {
+    color: var(--accent-color);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    /* Hidden by default via class? No, we'll toggle display */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal {
+    background: var(--surface-color);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    min-width: 300px;
+    text-align: center;
+}
+
+.modal h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.modal input {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Edit Button in Reader */
+#edit-material-btn {
+    display: none;
+    /* Hidden by default */
+}
+
+/* UI Fixes */
+/* Align list bullets inside to prevent hanging left */
+.content-body ul,
+.content-body ol {
+    list-style-position: inside;
+    padding-left: 0;
+    /* Remove default padding if using inside */
+    margin-bottom: 1.5rem;
+}
+
+.content-body li {
+    margin-bottom: 0.5rem;
+}
+
+/* Ensure Header Alignment */
+/* The user said title isn't aligned with text. 
+   If lists are now inside, they align. 
+   Regular p and h1 should already align as they share the container padding.
+   Let's check if 'article' has padding. No, 'main' has padding. 'article' is centered.
+   So everything inside 'article' (h1, p) should align left.
+   Unless there's some specific reset missing.
+   Let's ensure 0 margin-left on everything.
+*/
+.reader-header h1 {
+    margin-left: 0;
+}
+
+/* Notification */
+#notification {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+
+    /* Responsive Width adjustments */
+    width: auto;
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 450px) {
+    #notification {
+        white-space: normal;
+        min-width: unset;
+        width: 90%;
+    }
+}
+
+#notification.show {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    header {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .add-form {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+    }
+}
+
+
+/* Secondary Button (Back btn) */
+.secondary-btn {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    border-color: var(--text-primary);
+    background-color: var(--surface-color);
+}
+
+.reader-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+    /* Prevent touching */
+    flex-wrap: wrap;
+    /* Allow wrapping on very small screens */
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: -0.5rem;
+    /* pull closer to textarea */
+    padding: 0.5rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.toolbar button {
+    padding: 0.4rem 0.8rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.toolbar button:hover {
+    background: var(--border-color);
+}
+
+textarea {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Custom Context Menu */
+.context-menu {
+    position: fixed;
+    z-index: 2000;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    border-radius: 8px;
+    padding: 0.5rem;
+    min-width: 120px;
+}
+
+.context-menu.hidden {
+    display: none;
+}
+
+.context-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    color: #e74c3c;
+    /* Red for delete */
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.context-btn:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Page Footer (Copyright) */
+footer {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 20px));
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: auto;
+    /* Push to bottom */
+}
+
+/* AI Button in Toolbar */
+.ai-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.ai-btn:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+    transform: scale(1.05);
+}
+
+/* Modal Hint Text */
+.modal-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0 1rem 0;
+    text-align: left;
+}
