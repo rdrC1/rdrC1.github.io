@@ -1,5 +1,5 @@
 const API_KEY = 'rewizer_SecureKey_UserOnly_2025';
-const API_BASE = 'https://87.106.151.120:43561/api'; // HTTPS for GitHub Pages compatibility
+const API_BASE = 'https://rewizer.truenode.hu/api'; // Custom Domain HTTPS via Caddy
 
 
 // State
